@@ -1,7 +1,10 @@
 import os
 
 def write(path, content):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    # اصلاح مسیر: فقط اگر نام پوشه خالی نبود آن را بساز
+    dir_name = os.path.dirname(path)
+    if dir_name:
+        os.makedirs(dir_name, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
 
@@ -115,7 +118,7 @@ write("app/src/main/res/values/themes.xml", """<?xml version="1.0" encoding="utf
 </resources>
 """)
 
-# 8. MainActivity.kt (Full App)
+# 8. MainActivity.kt
 write("app/src/main/java/com/simx/app/MainActivity.kt", r"""
 package com.simx.app
 
