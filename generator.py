@@ -7,6 +7,7 @@ def write(path, content):
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
 
+# 1. settings.gradle.kts
 write("settings.gradle.kts", """
 pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
 dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
@@ -14,18 +15,21 @@ rootProject.name = "SIMX"
 include(":app")
 """)
 
+# 2. build.gradle.kts (root)
 write("build.gradle.kts", """
 plugins { id("com.android.application") version "8.2.2" apply false; id("org.jetbrains.kotlin.android") version "1.9.22" apply false }
 """)
 
+# 3. gradle.properties
 write("gradle.properties", "org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8\nandroid.useAndroidX=true\nkotlin.code.style=official\n")
 
+# 4. app/build.gradle.kts
 write("app/build.gradle.kts", """
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.android") }
 android {
     namespace = "com.simx.app"
     compileSdk = 34
-    defaultConfig { applicationId = "com.simx.app"; minSdk = 26; targetSdk = 34; versionCode = 3; versionName = "3.0.0" }
+    defaultConfig { applicationId = "com.simx.app"; minSdk = 26; targetSdk = 34; versionCode = 4; versionName = "3.1.0" }
     buildTypes { release { isMinifyEnabled = false } }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
@@ -45,6 +49,7 @@ dependencies {
 }
 """)
 
+# 5. AndroidManifest.xml
 write("app/src/main/AndroidManifest.xml", """<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
@@ -56,10 +61,11 @@ write("app/src/main/AndroidManifest.xml", """<?xml version="1.0" encoding="utf-8
 </manifest>
 """)
 
+# 6. resources
 write("app/src/main/res/values/strings.xml", """<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">SIMX</string></resources>""")
 write("app/src/main/res/values/themes.xml", """<?xml version="1.0" encoding="utf-8"?><resources><style name="Theme.SIMX" parent="android:Theme.Material.NoActionBar"><item name="android:statusBarColor">#0A0616</item><item name="android:windowBackground">#0A0616</item></style></resources>""")
 
-# 8. MainActivity.kt (نسخه v3.0 Royal Purple + Simurgh + Market Tabs)
+# 7. MainActivity.kt (نسخه v3.1 ۱۰۰٪ پایدار با تم رویال بنفش + سیمرغ)
 write("app/src/main/java/com/simx/app/MainActivity.kt", r"""
 package com.simx.app
 
@@ -75,7 +81,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,10 +96,10 @@ import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 // 🎨 پالت رنگی رویال بنفش و طلایی سیمرغ
-val BgDark = Color(0xFF0A0616)       // بنفش بسیار تاریک (پس‌زمینه)
-val CardDark = Color(0xFF17102A)     // بنفش تیره (کارت‌ها)
-val AccentPurple = Color(0xFF9D4EDD) // بنفش نئونی (دکمه‌ها و اکتیوها)
-val SimurghGold = Color(0xFFF3C623)  // طلایی لوکس سیمرغ
+val BgDark = Color(0xFF0A0616)       // بنفش رویال تیره
+val CardDark = Color(0xFF17102A)     // بنفش کارت‌ها
+val AccentPurple = Color(0xFF9D4EDD) // بنفش نئونی
+val SimurghGold = Color(0xFFF3C623)  // طلایی سیمرغ
 val BullGreen = Color(0xFF00E676)
 val BearRed = Color(0xFFFF3D00)
 val TextMain = Color(0xFFF8F9FA)
@@ -110,6 +115,10 @@ data class LiveAsset(
     val bias: String,
     val narrative: String,
     val action: String,
+    val entry: String,
+    val sl: String,
+    val tp: String,
+    val rr: String,
     val chartPoints: MutableList<Float>
 )
 
@@ -129,40 +138,38 @@ fun SimxV3App() {
     // لیست کامل دارایی‌ها با تفکیک بازار
     val allAssets = remember {
         mutableStateListOf(
-            // --- Crypto ---
-            LiveAsset("crypto", "BTC/USDT", "بیت‌کوین", 67450f, 3.4f, "صعودی", "جذب شدید سفارشات فروش در کف حمایتی. آماده شکست مقاومت ۶۹ هزار.", "خرید (LONG)", generateChart(true)),
-            LiveAsset("crypto", "ETH/USDT", "اتریوم", 3520f, 2.1f, "صعودی", "رشد حجم معاملات در شبکه‌های لایه دو. روند صعودی همگام با بیت‌کوین.", "خرید (LONG)", generateChart(true)),
-            LiveAsset("crypto", "SOL/USDT", "سولانا", 145f, 8.5f, "صعودی قدرتمند", "ورود سرمایه سنگین نهادی به شبکه سولانا. مقاومت بعدی ۱۵۵ دلار.", "خرید (LONG)", generateChart(true)),
-            LiveAsset("crypto", "BNB/USDT", "بایننس‌کوین", 590f, -1.2f, "نزولی ضعیف", "فشار فروش ملایم در ناحیه مقاومتی. انتظار برای پولبک.", "صبر کنید", generateChart(false)),
-            LiveAsset("crypto", "XRP/USDT", "ریپل", 0.62f, 0.5f, "خنثی", "نوسان رنج در فشردگی کامل. در انتظار اخبار دادگاه SEC.", "صبر کنید", generateChart(true)),
-            LiveAsset("crypto", "ADA/USDT", "کاردانو", 0.45f, -2.4f, "نزولی", "خروج سرمایه و ضعف ساختار قیمت. احتمال ریزش تا ۰.۴۰.", "فروش (SHORT)", generateChart(false)),
+            // --- کریپتوکارنسی‌های اصلی ---
+            LiveAsset("crypto", "BTC/USDT", "بیت‌کوین (BTC)", 67450f, 3.4f, "صعودی قدرتمند", "جذب شدید سفارشات فروش در کف حمایتی. آماده شکست مقاومت ۶۹ هزار دلار.", "خرید (LONG)", "$66,900 - $67,100", "$65,800", "$69,200", "1 : 2.3", generateChart(true)),
+            LiveAsset("crypto", "ETH/USDT", "اتریوم (ETH)", 3520f, 2.1f, "صعودی", "رشد حجم معاملات در شبکه‌های لایه دو. روند صعودی همگام با بیت‌کوین.", "خرید (LONG)", "$3,480 - $3,500", "$3,410", "$3,650", "1 : 2.1", generateChart(true)),
+            LiveAsset("crypto", "SOL/USDT", "سولانا (SOL)", 145f, 8.5f, "صعودی پرقدرت", "ورود سرمایه سنگین نهادی به شبکه سولانا. مقاومت بعدی ۱۵۵ دلار.", "خرید (LONG)", "$141 - $143", "$136", "$155", "1 : 2.5", generateChart(true)),
+            LiveAsset("crypto", "BNB/USDT", "بایننس‌کوین", 590f, -1.2f, "نزولی ضعیف", "فشار فروش ملایم در ناحیه مقاومتی. انتظار برای پولبک به حمایت.", "صبر کنید", "-", "-", "-", "-", generateChart(false)),
+            LiveAsset("crypto", "XRP/USDT", "ریپل (XRP)", 0.62f, 0.5f, "رنج و خنثی", "نوسان در فشردگی کامل. در انتظار اعلام اخبار دادگاه SEC.", "صبر کنید", "-", "-", "-", "-", generateChart(true)),
+            LiveAsset("crypto", "ADA/USDT", "کاردانو (ADA)", 0.45f, -2.4f, "نزولی", "خروج سرمایه و ضعف ساختار قیمت. احتمال اصلاح تا محدوده ۰.۴۰ دلار.", "فروش (SHORT)", "$0.46 - $0.47", "$0.49", "$0.40", "1 : 2.0", generateChart(false)),
             
-            // --- Forex & Commodities ---
-            LiveAsset("forex", "XAU/USD", "انس طلا", 2345.50f, 0.8f, "صبر و پایش", "فشردگی قیمت قبل از انتشار آمار تورم آمریکا. ریسک معاملات بالا است.", "صبر کنید", generateChart(true)),
-            LiveAsset("forex", "EUR/USD", "یورو/دلار", 1.0825f, -0.4f, "نزولی", "تقویت شاخص دلار به دلیل لحن هاوکیش فدرال رزرو. یورو تحت فشار است.", "فروش (SHORT)", generateChart(false)),
-            LiveAsset("forex", "GBP/USD", "پوند/دلار", 1.2640f, -0.2f, "رنج", "پوند در محدوده تصمیم‌گیری قرار دارد. عدم وجود جهت واضح.", "صبر کنید", generateChart(false)),
-            LiveAsset("forex", "USD/JPY", "دلار/ین", 151.20f, 1.2f, "صعودی", "بانک مرکزی ژاپن تمایلی به مداخله ندارد. صعود دلار ادامه دارد.", "خرید (LONG)", generateChart(true))
+            // --- فارکس و طلا ---
+            LiveAsset("forex", "XAU/USD", "انس جهانی طلا", 2345.50f, 0.8f, "صبر و پایش", "فشردگی قیمت قبل از انتشار آمار تورم آمریکا. ریسک معاملات بالا است.", "صبر کنید", "-", "-", "-", "-", generateChart(true)),
+            LiveAsset("forex", "EUR/USD", "یورو / دلار", 1.0825f, -0.4f, "نزولی", "تقویت شاخص دلار به دلیل لحن هاوکیش فدرال رزرو. یورو تحت فشار است.", "فروش (SHORT)", "1.0840 - 1.0860", "1.0910", "1.0750", "1 : 1.8", generateChart(false)),
+            LiveAsset("forex", "GBP/USD", "پوند / دلار", 1.2640f, -0.2f, "رنج", "پوند در محدوده تصمیم‌گیری قرار دارد. عدم وجود جهت واضح.", "صبر کنید", "-", "-", "-", "-", generateChart(false)),
+            LiveAsset("forex", "USD/JPY", "دلار / ین ژاپن", 151.20f, 1.2f, "صعودی", "بانک مرکزی ژاپن تمایلی به مداخله ندارد. صعود دلار ادامه دارد.", "خرید (LONG)", "150.50 - 150.80", "149.80", "152.50", "1 : 2.2", generateChart(true))
         )
     }
 
     // شبیه‌ساز نوسان زنده و واقعی قیمت‌ها
     LaunchedEffect(Unit) {
         while (true) {
-            delay(1500) // هر 1.5 ثانیه قیمت همه ارزها نوسان میکند
+            delay(1500)
             for (i in allAssets.indices) {
                 val asset = allAssets[i]
-                val fluctuation = (Random.nextFloat() - 0.5f) * (asset.price * 0.001f) // نوسان 0.1 درصدی
+                val fluctuation = (Random.nextFloat() - 0.5f) * (asset.price * 0.001f)
                 asset.price += fluctuation
                 asset.chartPoints.removeAt(0)
                 asset.chartPoints.add(asset.price)
-                allAssets[i] = asset.copy() // تریگر برای آپدیت UI
+                allAssets[i] = asset.copy()
             }
         }
     }
 
     val currentMarketAssets = allAssets.filter { if (marketTab == 0) it.category == "crypto" else it.category == "forex" }
-    
-    // جلوگیری از کرش هنگام تغییر تب بازار
     if (selectedSymbolIndex >= currentMarketAssets.size) selectedSymbolIndex = 0
 
     Column(Modifier.fillMaxSize().background(BgDark)) {
@@ -172,7 +179,7 @@ fun SimxV3App() {
             Arrangement.SpaceBetween, Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("🦅", fontSize = 28.sp) // نماد موقت سیمرغ
+                Text("🦅", fontSize = 28.sp)
                 Spacer(Modifier.width(8.dp))
                 Text("SIMX", color = SimurghGold, fontSize = 24.sp, fontWeight = FontWeight.Black)
             }
@@ -185,30 +192,34 @@ fun SimxV3App() {
             }
         }
 
-        // تب انتخاب بازار (کریپتو / فارکس)
-        TabRow(
-            selectedTabIndex = marketTab,
-            containerColor = BgDark,
-            contentColor = SimurghGold,
-            indicator = { tabPositions ->
-                Box(
-                    Modifier.tabIndicatorOffset(tabPositions[marketTab])
-                        .height(3.dp).padding(horizontal = 20.dp)
-                        .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
-                        .background(AccentPurple)
-                )
-            },
-            divider = { HorizontalDivider(color = Border) }
+        // دکمه‌های انتخاب بازار (کریپتو / فارکس)
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                .clip(RoundedCornerShape(12.dp)).background(CardDark).padding(4.dp)
         ) {
-            Tab(selected = marketTab == 0, onClick = { marketTab = 0; selectedSymbolIndex = 0 },
-                text = { Text("کریپتوکارنسی", color = if (marketTab == 0) TextMain else TextSub, fontWeight = FontWeight.Bold) })
-            Tab(selected = marketTab == 1, onClick = { marketTab = 1; selectedSymbolIndex = 0 },
-                text = { Text("فارکس و طلا", color = if (marketTab == 1) TextMain else TextSub, fontWeight = FontWeight.Bold) })
+            Box(
+                Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                    .background(if (marketTab == 0) AccentPurple else Color.Transparent)
+                    .clickable { marketTab = 0; selectedSymbolIndex = 0 }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("کریپتوکارنسی", color = if (marketTab == 0) Color.White else TextSub, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
+            Box(
+                Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                    .background(if (marketTab == 1) AccentPurple else Color.Transparent)
+                    .clickable { marketTab = 1; selectedSymbolIndex = 0 }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("فارکس و طلا", color = if (marketTab == 1) Color.White else TextSub, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
         }
 
         // نوار انتخاب نماد
         LazyRow(
-            Modifier.padding(vertical = 12.dp),
+            Modifier.padding(vertical = 10.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -218,10 +229,10 @@ fun SimxV3App() {
                     currentMarketAssets[i].symbol,
                     color = if (isSel) Color.White else TextSub,
                     fontSize = 13.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                    modifier = Modifier.clip(RoundedCornerShape(18.dp))
                         .background(if (isSel) AccentPurple else CardDark)
                         .clickable { selectedSymbolIndex = i }
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
         }
@@ -257,35 +268,35 @@ fun DashboardView(asset: LiveAsset) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Card(colors = CardDefaults.cardColors(containerColor = CardDark), shape = RoundedCornerShape(20.dp)) {
-                Column(Modifier.padding(20.dp)) {
+                Column(Modifier.padding(18.dp)) {
                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                         Column {
-                            Text(asset.displayName, color = TextMain, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(asset.displayName, color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             Text(asset.symbol, color = TextSub, fontSize = 12.sp)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             val priceStr = if (asset.price > 10) String.format("$%,.2f", asset.price) else String.format("$%.4f", asset.price)
-                            Text(priceStr, color = TextMain, fontSize = 24.sp, fontWeight = FontWeight.Black)
-                            Text("${if (asset.change >= 0) "+" else ""}${asset.change}%", color = if (asset.change >= 0) BullGreen else BearRed, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(priceStr, color = TextMain, fontSize = 22.sp, fontWeight = FontWeight.Black)
+                            Text("${if (asset.change >= 0) "+" else ""}${asset.change}%", color = if (asset.change >= 0) BullGreen else BearRed, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(14.dp))
 
-                    // نمودار گرافیکی با هاله رنگی
+                    // نمودار زنده با هاله رنگی
                     GradientSparkline(points = asset.chartPoints, isUp = asset.change >= 0)
 
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(16.dp))
 
                     val bColor = if (asset.bias.contains("صعودی")) BullGreen else if (asset.bias.contains("نزولی")) BearRed else SimurghGold
-                    Surface(color = bColor.copy(alpha = 0.1f), shape = RoundedCornerShape(10.dp)) {
-                        Text("🎯 سوگیری هوش مصنوعی: ${asset.bias}", color = bColor, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
+                    Surface(color = bColor.copy(alpha = 0.12f), shape = RoundedCornerShape(8.dp)) {
+                        Text("🎯 سوگیری هوش مصنوعی: ${asset.bias}", color = bColor, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
                     }
 
-                    Spacer(Modifier.height(16.dp))
-                    Text("📖 تحلیل ساختار و جریان سفارشات:", color = AccentPurple, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text(asset.narrative, color = TextSub, fontSize = 14.sp, lineHeight = 22.sp)
+                    Spacer(Modifier.height(14.dp))
+                    Text("📖 تحلیل ساختار و جریان سفارشات:", color = AccentPurple, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(4.dp))
+                    Text(asset.narrative, color = TextSub, fontSize = 13.sp, lineHeight = 20.sp)
                 }
             }
         }
@@ -293,31 +304,31 @@ fun DashboardView(asset: LiveAsset) {
         if (asset.action != "صبر کنید") {
             item {
                 Card(colors = CardDefaults.cardColors(containerColor = CardDark), shape = RoundedCornerShape(20.dp)) {
-                    Column(Modifier.padding(20.dp)) {
+                    Column(Modifier.padding(18.dp)) {
                         val actColor = if (asset.action.contains("LONG") || asset.action.contains("خرید")) BullGreen else BearRed
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(10.dp).clip(RoundedCornerShape(5.dp)).background(actColor))
+                            Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(actColor))
                             Spacer(Modifier.width(8.dp))
-                            Text("سیگنال: ${asset.action}", color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text("سیگنال پیشنهاد: ${asset.action}", color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
                         
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(14.dp))
                         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-                            Column { Text("محدوده ورود", color = TextSub, fontSize = 12.sp); Text(asset.entry, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
-                            Column(horizontalAlignment = Alignment.End) { Text("حد ضرر", color = TextSub, fontSize = 12.sp); Text(asset.sl, color = BearRed, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                            Column { Text("محدوده ورود:", color = TextSub, fontSize = 11.sp); Text(asset.entry, color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                            Column(horizontalAlignment = Alignment.End) { Text("حد ضرر (SL):", color = TextSub, fontSize = 11.sp); Text(asset.sl, color = BearRed, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
                         }
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(10.dp))
                         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-                            Column { Text("هدف سود", color = TextSub, fontSize = 12.sp); Text(asset.tp, color = BullGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
-                            Column(horizontalAlignment = Alignment.End) { Text("نسبت ریسک", color = TextSub, fontSize = 12.sp); Text(asset.rr, color = SimurghGold, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                            Column { Text("تارگت سود (TP):", color = TextSub, fontSize = 11.sp); Text(asset.tp, color = BullGreen, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                            Column(horizontalAlignment = Alignment.End) { Text("نسبت R:R:", color = TextSub, fontSize = 11.sp); Text(asset.rr, color = SimurghGold, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
                         }
 
-                        Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(16.dp))
                         Button(
-                            onClick = {}, Modifier.fillMaxWidth().height(50.dp),
+                            onClick = {}, Modifier.fillMaxWidth().height(48.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = AccentPurple),
-                            shape = RoundedCornerShape(14.dp)
-                        ) { Text("اجرای سیگنال", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
+                            shape = RoundedCornerShape(12.dp)
+                        ) { Text("🚀 اجرای سیگنال در صرافی", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp) }
                     }
                 }
             }
@@ -328,7 +339,7 @@ fun DashboardView(asset: LiveAsset) {
 @Composable
 fun GradientSparkline(points: List<Float>, isUp: Boolean) {
     val lineColor = if (isUp) BullGreen else BearRed
-    Canvas(modifier = Modifier.fillMaxWidth().height(60.dp)) {
+    Canvas(modifier = Modifier.fillMaxWidth().height(50.dp)) {
         if (points.size < 2) return@Canvas
         val min = points.minOrNull() ?: 0f
         val max = points.maxOrNull() ?: 1f
@@ -351,12 +362,11 @@ fun GradientSparkline(points: List<Float>, isUp: Boolean) {
         fillPath.lineTo(0f, h)
         fillPath.close()
 
-        drawPath(path = fillPath, brush = Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.3f), Color.Transparent)))
-        drawPath(path = path, color = lineColor, style = Stroke(width = 5f))
+        drawPath(path = fillPath, brush = Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.25f), Color.Transparent)))
+        drawPath(path = path, color = lineColor, style = Stroke(width = 4f))
     }
 }
 
-// توابع کمکی برای تولید دیتای رندوم نمودار در نسخه تست
 fun generateChart(isUp: Boolean): MutableList<Float> {
     val list = mutableListOf<Float>()
     var current = 100f
@@ -367,20 +377,9 @@ fun generateChart(isUp: Boolean): MutableList<Float> {
     return list
 }
 
-@Composable
-fun EventsView() {
-    Text("تقویم رویدادها در این نسخه آماده است...", color = TextMain)
-}
-
-@Composable
-fun ChatView() {
-    Text("دستیار هوشمند فعال است...", color = TextMain)
-}
-
-@Composable
-fun SettingsView() {
-    Text("تنظیمات سیستم...", color = TextMain)
-}
+@Composable fun EventsView() { Text("تقویم رویدادها...", color = TextMain) }
+@Composable fun ChatView() { Text("دستیار هوشمند...", color = TextMain) }
+@Composable fun SettingsView() { Text("تنظیمات سیستم...", color = TextMain) }
 """)
 
-print("v3.0 Royal Purple with Simurgh Generated!")
+print("v3.1 Stable Generated Successfully!")
