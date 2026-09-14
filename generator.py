@@ -29,7 +29,7 @@ plugins { id("com.android.application"); id("org.jetbrains.kotlin.android") }
 android {
     namespace = "com.simx.app"
     compileSdk = 34
-    defaultConfig { applicationId = "com.simx.app"; minSdk = 26; targetSdk = 34; versionCode = 5; versionName = "5.0.0" }
+    defaultConfig { applicationId = "com.simx.app"; minSdk = 26; targetSdk = 34; versionCode = 6; versionName = "5.1.0" }
     buildTypes { release { isMinifyEnabled = false } }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
@@ -65,7 +65,7 @@ write("app/src/main/AndroidManifest.xml", """<?xml version="1.0" encoding="utf-8
 write("app/src/main/res/values/strings.xml", """<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">SIMX Pro</string></resources>""")
 write("app/src/main/res/values/themes.xml", """<?xml version="1.0" encoding="utf-8"?><resources><style name="Theme.SIMX" parent="android:Theme.Material.NoActionBar"><item name="android:statusBarColor">#060312</item><item name="android:windowBackground">#060312</item></style></resources>""")
 
-# 7. MainActivity.kt (نسخه v5.0 Quantum Pro)
+# 7. MainActivity.kt (نسخه v5.1 Quantum Pro — اصلاح کامل علامت‌های متنی و استرینگ‌ها)
 write("app/src/main/java/com/simx/app/MainActivity.kt", r"""
 package com.simx.app
 
@@ -97,11 +97,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
-// 🎨 پالت رنگی اختصاصی بنفش کوانتومی + طلایی سیمرغ
 val BgQuantum = Color(0xFF060312)
 val CardQuantum = Color(0xFF120B26)
 val CardBorder = Color(0xFF2A1B54)
@@ -115,7 +115,7 @@ val TextSub = Color(0xFF948EA5)
 data class Candle(val open: Float, val high: Float, val low: Float, val close: Float)
 
 data class QuantumAsset(
-    val category: String, // "crypto" | "forex"
+    val category: String,
     val symbol: String,
     val name: String,
     var price: Float,
@@ -129,7 +129,7 @@ data class QuantumAsset(
     val tp: String,
     val rr: String,
     val candles: List<Candle>,
-    val sensorScores: List<Float> // 5 امتیاز سنسورها برای نمودار راداری
+    val sensorScores: List<Float>
 )
 
 class MainActivity : ComponentActivity() {
@@ -142,25 +142,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SimxQuantumApp() {
     var mainTab by remember { mutableIntStateOf(0) }
-    var marketCategory by remember { mutableIntStateOf(0) } // 0: Crypto, 1: Forex
+    var marketCategory by remember { mutableIntStateOf(0) }
     var selectedAssetIndex by remember { mutableIntStateOf(0) }
 
     val assets = remember {
         mutableStateListOf(
-            // --- کریپتوکارنسی‌ها ---
             QuantumAsset("crypto", "BTC/USDT", "بیت‌کوین", 67820f, 3.85f, "صعودی قدرتمند",
                 "سنسور Order Flow ورود ۱۲.۴ میلیون دلار سفارش خرید تهاجمی را ثبت کرد. استخر نقدینگی سقف آماده فتح است.",
-                "خرید (LONG)", "$67,100 - $67,400", "$66,150", "$69,800", "1 : 2.4",
+                "خرید (LONG)", "67,100 - 67,400 \$", "66,150 \$", "69,800 \$", "1 : 2.4",
                 generateCandles(true), listOf(0.9f, 0.85f, 0.95f, 0.7f, 0.88f)),
 
             QuantumAsset("crypto", "ETH/USDT", "اتریوم", 3540f, 2.40f, "صعودی",
                 "هم‌راستایی ساختار قیمت در تایم‌فریم ۴ ساعته با افزایش حجم شبکه‌های لایه دو. روند صعودی تثبیت شده است.",
-                "خرید (LONG)", "$3,490 - $3,510", "$3,420", "$3,680", "1 : 2.1",
+                "خرید (LONG)", "3,490 - 3,510 \$", "3,420 \$", "3,680 \$", "1 : 2.1",
                 generateCandles(true), listOf(0.8f, 0.75f, 0.85f, 0.65f, 0.8f)),
 
             QuantumAsset("crypto", "SOL/USDT", "سولانا", 148.5f, 9.20f, "صعودی شدید",
-                "ردپای جریان سرمایه نهادی (Capital Flow) در بلاکچین. خروج اکید فروشندگان و آمادگی برای رالی صعودی.",
-                "خرید (LONG)", "$144 - $146", "$138", "$162", "1 : 2.7",
+                "ردپای جریان سرمایه نهادی در بلاکچین. خروج اکید فروشندگان و آمادگی برای رالی صعودی.",
+                "خرید (LONG)", "144 - 146 \$", "138 \$", "162 \$", "1 : 2.7",
                 generateCandles(true), listOf(0.95f, 0.9f, 0.9f, 0.85f, 0.92f)),
 
             QuantumAsset("crypto", "BNB/USDT", "بایننس‌کوین", 588f, -0.90f, "اصلاحی / رنج",
@@ -173,11 +172,11 @@ fun SimxQuantumApp() {
                 "صبر کنید", "-", "-", "-", "-",
                 generateCandles(true), listOf(0.5f, 0.6f, 0.55f, 0.9f, 0.5f)),
 
-            QuantumAsset("crypto", "ADA/USDT", "کاردانو", 0.445f, -3.10f, "نزولی", "شکست ساختار حمایتی و تایید BOS نزولی. واگرایی منفی در دلتای خریداران.",
-                "فروش (SHORT)", "$0.452 - $0.458", "$0.472", "$0.395", "1 : 2.2",
+            QuantumAsset("crypto", "ADA/USDT", "کاردانو", 0.445f, -3.10f, "نزولی", 
+                "شکست ساختار حمایتی و تایید BOS نزولی. واگرایی منفی در دلتای خریداران.",
+                "فروش (SHORT)", "0.452 - 0.458 \$", "0.472 \$", "0.395 \$", "1 : 2.2",
                 generateCandles(false), listOf(0.2f, 0.3f, 0.15f, 0.4f, 0.25f)),
 
-            // --- فارکس و طلا ---
             QuantumAsset("forex", "XAU/USD", "انس جهانی طلا", 2348.80f, 1.12f, "هشدار خبر کلان",
                 "طلا در نزدیکی مرز تاریخی قرار دارد. کمتر از ۲ ساعت تا انتشار آمار تورم آمریکا (CPI) باقی مانده است.",
                 "صبر کنید", "-", "-", "-", "-",
@@ -195,7 +194,7 @@ fun SimxQuantumApp() {
         )
     }
 
-    // نوسان زنده و واقعی قیمت‌ها
+    // نوسان زنده قیمت‌ها
     LaunchedEffect(Unit) {
         while (true) {
             delay(1200)
@@ -212,7 +211,7 @@ fun SimxQuantumApp() {
     if (selectedAssetIndex >= currentFilteredAssets.size) selectedAssetIndex = 0
 
     Column(Modifier.fillMaxSize().background(BgQuantum)) {
-        // ── هدر سیمرغ ──
+        // هدر برنامه
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
             Arrangement.SpaceBetween, Alignment.CenterVertically
@@ -245,7 +244,7 @@ fun SimxQuantumApp() {
             }
         }
 
-        // ── دکمه‌های تفکیک بازار (Crypto vs Forex) ──
+        // تفکیک بازار (Crypto vs Forex)
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp)
                 .clip(RoundedCornerShape(14.dp)).background(CardQuantum)
@@ -271,7 +270,7 @@ fun SimxQuantumApp() {
             }
         }
 
-        // ── نوار اسکرول نمادها ──
+        // انتخاب نماد
         LazyRow(
             Modifier.padding(vertical = 12.dp),
             contentPadding = PaddingValues(horizontal = 20.dp),
@@ -295,7 +294,7 @@ fun SimxQuantumApp() {
             }
         }
 
-        // ── محتوای اصلی تب‌ها ──
+        // محتوا
         Box(Modifier.weight(1f).padding(horizontal = 20.dp)) {
             if (currentFilteredAssets.isNotEmpty()) {
                 when (mainTab) {
@@ -307,7 +306,7 @@ fun SimxQuantumApp() {
             }
         }
 
-        // ── نوار ناوبری شیشه‌ای پایین (Bottom Nav) ──
+        // ناوبری پایین
         Surface(
             color = CardQuantum,
             modifier = Modifier.fillMaxWidth().border(1.dp, CardBorder, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
@@ -334,7 +333,6 @@ fun SimxQuantumApp() {
 @Composable
 fun QuantumDashboard(asset: QuantumAsset) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        // کارت قیمت و هدر زنده
         item {
             Card(
                 colors = CardDefaults.cardColors(containerColor = CardQuantum),
@@ -348,22 +346,21 @@ fun QuantumDashboard(asset: QuantumAsset) {
                             Text(asset.symbol, color = TextSub, fontSize = 12.sp)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            val priceFormat = if (asset.price > 10) String.format("$%,.2f", asset.price) else String.format("$%.4f", asset.price)
-                            Text(priceFormat, color = TextMain, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                            val pVal = asset.price
+                            val priceStr = if (pVal > 10f) String.format("%.2f \$", pVal) else String.format("%.4f \$", pVal)
+                            Text(priceStr, color = TextMain, fontSize = 22.sp, fontWeight = FontWeight.Black)
                             Text("${if (asset.change >= 0) "+" else ""}${asset.change}%", color = if (asset.change >= 0) BullGreen else BearRed, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
                     Spacer(Modifier.height(16.dp))
 
-                    // 🕯️ چارت کندل‌استیک واقعی با بدنه و سایه
                     Text("نمودار کندل‌استیک زنده (4H):", color = TextSub, fontSize = 11.sp)
                     Spacer(Modifier.height(6.dp))
                     RealCandlestickChart(candles = asset.candles)
 
                     Spacer(Modifier.height(18.dp))
 
-                    // 🕸️ رادار ۲۱ سنسور هوش مصنوعی
                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                         Text("رادار هم‌راستایی سنسورها:", color = SimurghGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         Text("طیف تحلیل ۵ لایه", color = TextSub, fontSize = 10.sp)
@@ -373,7 +370,6 @@ fun QuantumDashboard(asset: QuantumAsset) {
 
                     Spacer(Modifier.height(16.dp))
 
-                    // سوگیری کلی
                     val biasColor = if (asset.aiBias.contains("صعودی")) BullGreen else if (asset.aiBias.contains("نزولی")) BearRed else SimurghGold
                     Surface(color = biasColor.copy(alpha = 0.12f), shape = RoundedCornerShape(12.dp), modifier = Modifier.border(1.dp, biasColor.copy(alpha = 0.3f), RoundedCornerShape(12.dp))) {
                         Text("🎯 تحلیل مغز سیستم: ${asset.aiBias}", color = biasColor, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
@@ -387,7 +383,6 @@ fun QuantumDashboard(asset: QuantumAsset) {
             }
         }
 
-        // کارت سیگنال و مدیریت ریسک
         if (asset.action != "صبر کنید") {
             item {
                 Card(
@@ -427,7 +422,6 @@ fun QuantumDashboard(asset: QuantumAsset) {
     }
 }
 
-// 🕯️ رسم نمودار کندل‌استیک واقعی رو بوم Canvas
 @Composable
 fun RealCandlestickChart(candles: List<Candle>) {
     Canvas(modifier = Modifier.fillMaxWidth().height(100.dp).background(Color(0xFF09051B), RoundedCornerShape(12.dp)).padding(8.dp)) {
@@ -451,10 +445,8 @@ fun RealCandlestickChart(candles: List<Candle>) {
             val openY = h - ((c.open - minP) / range * h)
             val closeY = h - ((c.close - minP) / range * h)
 
-            // رسم سایه کندل (Wick)
             drawLine(color = color, start = Offset(x, highY), end = Offset(x, lowY), strokeWidth = 2f)
 
-            // رسم بدنه کندل (Body)
             val topY = minOf(openY, closeY)
             val bodyH = maxOf(abs(openY - closeY), 3f)
             drawRect(color = color, topLeft = Offset(x - candleWidth / 2, topY), size = Size(candleWidth, bodyH))
@@ -462,7 +454,6 @@ fun RealCandlestickChart(candles: List<Candle>) {
     }
 }
 
-// 🕸️ رسم نمودار راداری پنج‌ضلعی هوش مصنوعی (Spider Radar Chart)
 @Composable
 fun AiRadarChart(scores: List<Float>) {
     Canvas(modifier = Modifier.fillMaxWidth().height(120.dp)) {
@@ -471,11 +462,10 @@ fun AiRadarChart(scores: List<Float>) {
         val radius = minOf(centerX, centerY) * 0.85f
         val sides = 5
 
-        // رسم شبکه رادار
         for (r in listOf(0.33f, 0.66f, 1.0f)) {
             val gridPath = Path()
             for (i in 0 until sides) {
-                val angle = Math.toRadians((i * 360.0 / sides) - 90.0)
+                val angle = (i * 360.0 / sides - 90.0) * (Math.PI / 180.0)
                 val x = centerX + (radius * r * cos(angle)).toFloat()
                 val y = centerY + (radius * r * sin(angle)).toFloat()
                 if (i == 0) gridPath.moveTo(x, y) else gridPath.lineTo(x, y)
@@ -484,11 +474,10 @@ fun AiRadarChart(scores: List<Float>) {
             drawPath(gridPath, color = CardBorder, style = Stroke(width = 1.5f))
         }
 
-        // رسم چندضلعی داده‌های هوش مصنوعی
         val dataPath = Path()
         for (i in 0 until sides) {
             val score = scores.getOrElse(i) { 0.5f }
-            val angle = Math.toRadians((i * 360.0 / sides) - 90.0)
+            val angle = (i * 360.0 / sides - 90.0) * (Math.PI / 180.0)
             val x = centerX + (radius * score * cos(angle)).toFloat()
             val y = centerY + (radius * score * sin(angle)).toFloat()
             if (i == 0) dataPath.moveTo(x, y) else dataPath.lineTo(x, y)
@@ -514,11 +503,9 @@ fun generateCandles(isUp: Boolean): List<Candle> {
     return list
 }
 
-fun abs(a: Float) = if (a < 0) -a else a
-
 @Composable fun EventsScreen() { Text("تقویم رویدادها...", color = TextMain) }
 @Composable fun AiAssistantScreen() { Text("دستیار هوشمند...", color = TextMain) }
 @Composable fun ProfileScreen() { Text("حساب کاربر VIP...", color = TextMain) }
 """)
 
-print("V5.0 Quantum Pro Engine Generated Successfully!")
+print("V5.1 Stable Generated Successfully!")
